@@ -12,7 +12,8 @@ function App() {
   const [selectingBoard, setSelectingBoard] = useState<Boolean>(false);
   const [largerBoard, setLargerBoard] = useState<Board[][] | null>(null);
   const [boardIndex, setBoardIndex] = useState<Index | null>(null)
-
+  const [counterX, setCounterX] = useState<Array<Index>>([])
+  const [counterO, setCounterO] = useState<Array<Index>>([])
   
   const handleClick = (boardIdx: { row: number; col: number }, cellIdx: { row: number; col: number }) => {
     if (largerBoard) {
@@ -22,7 +23,8 @@ function App() {
       if (!selectingBoard) {
         if (currentBoard.matrix[cellRow][cellCol] === null) {
           currentBoard.set(currentPlayer, { row: cellRow, col: cellCol });
-          console.log("Set Token to:", { row: cellRow, col: cellCol })
+
+          // console.log("Set Token to:", { row: cellRow, col: cellCol })
           
           const winner = currentBoard.checkWin();
           if (winner) {
@@ -40,18 +42,58 @@ function App() {
           setSelectingBoard(false);
         } else {
           alert(`This board is complete! ${largerBoard[boardRow][boardCol].winner} won.`)
-
         }
       }
     } else {
       //ONLY FOR INITIAL BOARD
       const { row, col } = cellIdx;
       if (currentBoard.matrix[row][col] === null) {
-        currentBoard.set(currentPlayer, { row, col });
-        setCurrentPlayer(currentPlayer === Token.X ? Token.O : Token.X);
+        const position = { row: row, col: col }
+
+        if (currentPlayer === Token.X) {
+          if (counterX.length < 3) {
+            const newCounter = [...counterX, position]
+
+            currentBoard.set(currentPlayer, { row, col });
+            setCounterX(newCounter)
+            setCurrentPlayer(currentPlayer === Token.X ? Token.O : Token.X);
+          } else {
+            currentBoard.set(currentPlayer, { row, col });
+            setCurrentPlayer(currentPlayer === Token.X ? Token.O : Token.X);
+
+            currentBoard.unSet(null, counterX[0])
+
+            const splicedCounter = counterX.splice(1, 2)
+            const newCounter = [...splicedCounter, position]
+
+            setCounterX(newCounter)
+          }
+
+        } else {
+          if (counterO.length < 3) {
+            const newCounter = [...counterO, position]
+
+            currentBoard.set(currentPlayer, { row, col });
+            setCounterO(newCounter)
+            setCurrentPlayer(currentPlayer === Token.O ? Token.X : Token.O);
+          } else {
+            currentBoard.set(currentPlayer, { row, col });
+            setCurrentPlayer(currentPlayer === Token.O ? Token.X : Token.O);
+            
+            currentBoard.unSet(null, counterO[0])
+
+            const splicedCounter = counterO.splice(1, 2)
+            const newCounter = [...splicedCounter, position]
+
+            setCounterO(newCounter)
+          }
+        }
       }
     }
   };
+
+  console.log("X", counterX)
+  //console.log("O", counterO)
 
 
   const updateLargerBoard = (winner: Token, boardIdx: { row: number; col: number }) => {
@@ -92,29 +134,6 @@ function App() {
     setSelectingBoard(true);
   };
 
-  const create2xlBoard = (lastLargerBoard: Board[][]) => {
-    const dimension = 7; // 7x7 grid of boards
-    const newLargerBoard = Array(dimension)
-      .fill(null)
-      .map(() => Array(dimension).fill(null).map(() => new Board(3)));
-  
-    // Determine the center of the new larger board
-    const centerStart = Math.floor(dimension / 2) - 1;
-
-    const clonedLargeBoard = largerBoard
-
-    newLargerBoard[centerStart][centerStart] = largerBoard
-
-    // Update state
-    setLargerBoard(newLargerBoard);
-    setInitialBoard(null!);
-    setCurrentPlayer(currentPlayer === Token.X ? Token.O : Token.X);
-    setCurrentBoard(null!);
-    setSelectingBoard(true);
-  };
-  
-  
-  
 
   useEffect(() => {
     if (initialBoard) {
@@ -123,6 +142,7 @@ function App() {
 
       if (winner) {
         // Notify the user
+
         alert(`${winner} wins!`);
         // Create the larger board with the winning board in the center
         createLargerBoard(winner);
@@ -138,8 +158,7 @@ function App() {
       if (winner) {
         alert(`${winner} won the game!`)
       } else if (draw) {
-        alert("Expanding board!")
-        create2xlBoard(largerBoard!)
+        alert("HMMM!")
       }
     }
   }, [currentPlayer]);
@@ -149,8 +168,8 @@ function App() {
   };
 
   // console.log('Selecting Board?', selectingBoard);
-  console.log('CURRENT:', currentBoard);
-  console.log("INITIAL:", initialBoard)
+  // console.log('CURRENT:', currentBoard.matrix);
+  // console.log("INITIAL:", initialBoard)
   // console.log('MASTER:', largerBoard);
   // console.log("BoardIndex:", boardIndex)
 

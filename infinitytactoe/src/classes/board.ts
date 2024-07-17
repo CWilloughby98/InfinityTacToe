@@ -21,7 +21,7 @@ export class Board {
         this.winner = null
     }
 
-    public set(token:Token, position:{row: number, col:number}) {
+    public set(token:Token | null, position:{row: number, col:number}) {
         const { row, col } = position;
 
         if (row < 0 || row >= this.dimension || col < 0 || col >= this.dimension) {
@@ -30,6 +30,12 @@ export class Board {
         if (this.matrix[row][col] !== null) {
             throw new Error("Position already occupied");
         }
+
+        this.matrix[row][col] = token
+    }
+
+    public unSet(token: null, position:{row: number, col:number}) {
+        const { row, col } = position;
 
         this.matrix[row][col] = token
     }
