@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Board } from './classes/board';
 import { Token, Index } from './types';
-import { checkWin, checkLargerDraw } from './utils';
+import { checkWin, unSet } from './utils';
 import './App.css';
 
 function App() {
@@ -13,7 +13,10 @@ function App() {
   const [largerBoard, setLargerBoard] = useState<Board[][] | null>(null);
   const [boardIndex, setBoardIndex] = useState<Index | null>(null)
   const [counterX, setCounterX] = useState<Array<Index>>([])
+  const [largerBoardCounterX, setLargerBoardCounterX] = useState<Array<Index>>([])
   const [counterO, setCounterO] = useState<Array<Index>>([])
+  const [largerBoardCounterO, setLargerBoardCounterO] = useState<Array<Index>>([])
+  const [gameIsWon, setGameIsWon] = useState<boolean>(false)
   
   const handleClick = (boardIdx: { row: number; col: number }, cellIdx: { row: number; col: number }) => {
     if (largerBoard) {
@@ -22,14 +25,75 @@ function App() {
 
       if (!selectingBoard) {
         if (currentBoard.matrix[cellRow][cellCol] === null) {
-          currentBoard.set(currentPlayer, { row: cellRow, col: cellCol });
+          const position = { row: cellRow, col: cellCol }
 
-          // console.log("Set Token to:", { row: cellRow, col: cellCol })
+          if (currentPlayer === Token.X) {
+            if (counterX.length < 3) {
+              const newCounter = [...counterX, position]
+  
+              currentBoard.set(currentPlayer, position);
+              setCounterX(newCounter)
+              setCurrentPlayer(currentPlayer === Token.X ? Token.O : Token.X);
+            } else {
+              currentBoard.set(currentPlayer, position);
+              const winner = currentBoard.checkWin();
+
+              if (winner) {
+                // Notify the user
+                alert(`HANDLE CLICK ${winner} wins!`);
+                setCounterO([])
+                setCounterX([])
+                // Create the larger board with the winning board in the center
+                updateLargerBoard(winner, boardIndex!);
+                setCurrentPlayer(currentPlayer === Token.X ? Token.O : Token.X);
+              } else {
+                setCurrentPlayer(currentPlayer === Token.X ? Token.O : Token.X);
+                
+                const splicedCounter = counterX.splice(1, 2)
+                const newCounter = [...splicedCounter, position]
+                
+                setCounterX(newCounter)
+                currentBoard.unSet(null, counterX[0])
+              }
+            }
+          } else {
+            if (counterO.length < 3) {
+              const newCounter = [...counterO, position]
+  
+              currentBoard.set(currentPlayer, position);
+              setCounterO(newCounter)
+              setCurrentPlayer(currentPlayer === Token.O ? Token.X : Token.O);
+            } else {
+              currentBoard.set(currentPlayer, position);
+              const winner = currentBoard.checkWin();
+
+              if (winner) {
+                // Notify the user
+                alert(`HANDLE CLICK ${winner} wins!`);
+                setCounterO([])
+                setCounterX([])
+                // Create the larger board with the winning board in the center
+                updateLargerBoard(winner, boardIndex!);
+                setCurrentPlayer(currentPlayer === Token.O ? Token.X : Token.O);
+              } else {
+                setCurrentPlayer(currentPlayer === Token.O ? Token.X : Token.O);
+                
+                const splicedCounter = counterO.splice(1, 2)
+                const newCounter = [...splicedCounter, position]
+                
+                setCounterO(newCounter)
+                currentBoard.unSet(null, counterO[0])
+              }
+            }
+          }
+          //currentBoard.set(currentPlayer, { row: cellRow, col: cellCol });
           
           const winner = currentBoard.checkWin();
           if (winner) {
-            alert(`${winner} wins!`);
+            alert(`LAST HANDLER ${winner} wins!`);
             updateLargerBoard(winner, boardIndex!);
+            setCounterO([])
+            setCounterX([])
           } else {
             setCurrentPlayer(currentPlayer === Token.X ? Token.O : Token.X);
           }
@@ -53,20 +117,31 @@ function App() {
         if (currentPlayer === Token.X) {
           if (counterX.length < 3) {
             const newCounter = [...counterX, position]
-
+            
             currentBoard.set(currentPlayer, { row, col });
             setCounterX(newCounter)
             setCurrentPlayer(currentPlayer === Token.X ? Token.O : Token.X);
           } else {
             currentBoard.set(currentPlayer, { row, col });
-            setCurrentPlayer(currentPlayer === Token.X ? Token.O : Token.X);
+            const winner = currentBoard.checkWin();
 
-            currentBoard.unSet(null, counterX[0])
-
-            const splicedCounter = counterX.splice(1, 2)
-            const newCounter = [...splicedCounter, position]
-
-            setCounterX(newCounter)
+            if (winner) {
+              // Notify the user
+              alert(`HANDLE CLICK ${winner} wins!`);
+              setCounterO([])
+              setCounterX([])
+              // Create the larger board with the winning board in the center
+              createLargerBoard(winner);
+              setCurrentPlayer(winner === Token.X ? Token.O : Token.X);
+            } else {
+              setCurrentPlayer(currentPlayer === Token.X ? Token.O : Token.X);
+              
+              const splicedCounter = counterX.splice(1, 2)
+              const newCounter = [...splicedCounter, position]
+              
+              setCounterX(newCounter)
+              currentBoard.unSet(null, counterX[0])
+            }
           }
 
         } else {
@@ -78,23 +153,32 @@ function App() {
             setCurrentPlayer(currentPlayer === Token.O ? Token.X : Token.O);
           } else {
             currentBoard.set(currentPlayer, { row, col });
-            setCurrentPlayer(currentPlayer === Token.O ? Token.X : Token.O);
-            
-            currentBoard.unSet(null, counterO[0])
+            const winner = currentBoard.checkWin();
 
-            const splicedCounter = counterO.splice(1, 2)
-            const newCounter = [...splicedCounter, position]
-
-            setCounterO(newCounter)
+            if (winner) {
+              // Notify the user
+              alert(`HANDLE CLICK ${winner} wins!`);
+              setCounterO([])
+              setCounterX([])
+              // Create the larger board with the winning board in the center
+              createLargerBoard(winner);
+              setCurrentPlayer(winner === Token.O ? Token.X : Token.X);
+            } else {
+              setCurrentPlayer(currentPlayer === Token.O ? Token.X : Token.O);
+              
+              const splicedCounter = counterO.splice(1, 2)
+              const newCounter = [...splicedCounter, position]
+              
+              setCounterO(newCounter)
+              currentBoard.unSet(null, counterO[0])
+            }
           }
         }
       }
     }
   };
 
-  console.log("X", counterX)
-  //console.log("O", counterO)
-
+  console.log(gameIsWon)
 
   const updateLargerBoard = (winner: Token, boardIdx: { row: number; col: number }) => {
     const { row: boardRow, col: boardCol } = boardIdx;
@@ -106,8 +190,76 @@ function App() {
     const newLargerBoard = largerBoard
     newLargerBoard![boardRow][boardCol] = clonedCurrentBoard
 
-    setLargerBoard(largerBoard);
-    setCurrentPlayer(winner === Token.X ? Token.O : Token.X);
+    if (winner === Token.X) {
+      if (largerBoardCounterX.length < 3) {
+        const newCounter = [...largerBoardCounterX, boardIdx]
+        setLargerBoardCounterX(newCounter)
+
+        setLargerBoard(newLargerBoard);
+        setCurrentPlayer(winner === Token.X ? Token.O : Token.X);
+      } else {
+        const newCounter = [...largerBoardCounterX, boardIdx]
+        const gameWinner = checkWin(largerBoard!)
+        setLargerBoardCounterX(newCounter)
+
+        if (gameWinner) {
+          alert(`UPDATE LARGER ${gameWinner} won the game`)
+          setGameIsWon(true)
+          const splicedCounter = largerBoardCounterX.splice(1, 2)
+          const newCounter = [...splicedCounter, boardIdx]
+
+          setLargerBoardCounterX(newCounter)
+          // unSet(largerBoard!, largerBoardCounterX[0])
+          // setLargerBoard(newLargerBoard)
+
+          setLargerBoardCounterX([])
+          setLargerBoardCounterO([])
+        } else {
+          setCurrentPlayer(winner === Token.X ? Token.O : Token.X)
+
+          const splicedCounter = largerBoardCounterX.splice(1, 2)
+          const newCounter = [...splicedCounter, boardIdx]
+
+          setLargerBoardCounterX(newCounter)
+          unSet(largerBoard!, largerBoardCounterX[0])
+          setLargerBoard(newLargerBoard)
+        }
+      }
+    } else {
+      if (largerBoardCounterO.length < 3) {
+        const newCounter = [...largerBoardCounterO, boardIdx]
+        setLargerBoardCounterO(newCounter);
+
+        setLargerBoard(newLargerBoard);
+        setCurrentPlayer(winner === Token.O ? Token.X : Token.O)
+      } else {
+        const newCounter = [...largerBoardCounterO, boardIdx]
+        const gameWinner = checkWin(largerBoard!)
+        setLargerBoardCounterO(newCounter)
+
+        if (gameWinner) {
+          alert(`UPDATE LARGER ${gameWinner} won the game`)
+          setGameIsWon(true)
+          const splicedCounter = largerBoardCounterO.splice(1, 2)
+          const newCounter = [...splicedCounter, boardIdx]
+
+          setLargerBoardCounterO(newCounter)
+
+          setLargerBoardCounterX([])
+          setLargerBoardCounterO([])
+        } else {
+          setCurrentPlayer(winner === Token.O ? Token.X : Token.O)
+
+          const splicedCounter = largerBoardCounterO.splice(1, 2)
+          const newCounter = [...splicedCounter, boardIdx]
+
+          setLargerBoardCounterO(newCounter)
+          unSet(largerBoard!, largerBoardCounterO[0])
+          setLargerBoard(newLargerBoard)
+        }
+      }
+    }
+    
     setCurrentBoard(null!);
     setSelectingBoard(true);
   };
@@ -125,6 +277,15 @@ function App() {
     // Place the initial winning board at the center
     const center = Math.floor(dimension / 2);
     newLargerBoard[center][center] = clonedInitialBoard;
+    
+    const position = {row: center, col: center}
+    if (winner === Token.X) {
+      const newCounter = [...largerBoardCounterX, position]
+      setLargerBoardCounterX(newCounter)
+    } else {
+      const newCounter = [...largerBoardCounterO, position]
+      setLargerBoardCounterO(newCounter)
+    }
 
     // Update state
     setLargerBoard(newLargerBoard);
@@ -138,27 +299,22 @@ function App() {
   useEffect(() => {
     if (initialBoard) {
       const winner = currentBoard.checkWin();
-      const draw = currentBoard.checkDraw();
 
       if (winner) {
         // Notify the user
-
-        alert(`${winner} wins!`);
+        alert(`USE EFFECT ${winner} wins!`);
+        setCounterO([])
+        setCounterX([])
         // Create the larger board with the winning board in the center
         createLargerBoard(winner);
-      } else if (draw) {
-        alert(`Restarting Match`)
-        setInitialBoard(new Board(3))
-        setCurrentBoard(new Board(3))
-      }
+      } 
     } else {
       const winner = checkWin(largerBoard!)
-      const draw = checkLargerDraw(largerBoard!)
 
       if (winner) {
-        alert(`${winner} won the game!`)
-      } else if (draw) {
-        alert("HMMM!")
+        alert(`USE EFFECT ${winner} won the game!`)
+        setCounterO([])
+        setCounterX([])
       }
     }
   }, [currentPlayer]);
@@ -166,14 +322,6 @@ function App() {
   const isBoardEmpty = (board: Board) => {
     return board.matrix.flat().every(cell => cell === null);
   };
-
-  // console.log('Selecting Board?', selectingBoard);
-  // console.log('CURRENT:', currentBoard.matrix);
-  // console.log("INITIAL:", initialBoard)
-  // console.log('MASTER:', largerBoard);
-  // console.log("BoardIndex:", boardIndex)
-
-
 
   return (
     <div className='h-screen flex items-center'>

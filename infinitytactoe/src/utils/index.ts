@@ -1,6 +1,7 @@
 import { Token } from "../types";
 import { Board } from "../classes/board";
 
+
 export const checkWin = (board: Board[][]): Token | null => {
     const dimension = board.length;
 
@@ -37,10 +38,16 @@ export const checkWin = (board: Board[][]): Token | null => {
     return null;
 };
 
-export const checkDraw = (board: Board[][]): boolean => {
-    return board.every(row => row.every(cell => cell !== null)) && checkWin(board) === null;
-};
+// export const checkDraw = (board: Board[][]): boolean => {
+//     return board.every(row => row.every(cell => cell !== null)) && checkWin(board) === null;
+// };
 
-export const checkLargerDraw = (board: Board[][]): boolean => {
-    return board.every(row => row.every(cell => cell.winner !== null)) && checkWin(board) === null;
-};
+// export const checkLargerDraw = (board: Board[][]): boolean => {
+//     return board.every(row => row.every(cell => cell.winner !== null)) && checkWin(board) === null;
+// };
+
+export const unSet = (board: Board[][], position:{row: number, col:number}) => {
+    const { row, col } = position;
+
+    board[row][col] = new Board(3)
+}
