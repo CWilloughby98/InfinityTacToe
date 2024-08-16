@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from "framer-motion"
 import { Board } from './classes/board';
 import { Token, Index } from './types';
 import { checkWin, unSet } from './utils';
@@ -302,7 +303,7 @@ function App() {
 
       if (winner) {
         // Notify the user
-        alert(`USE EFFECT ${winner} wins!`);
+        alert(`${winner} wins the first match! Expanding Board...`);
         setCounterO([])
         setCounterX([])
         // Create the larger board with the winning board in the center
@@ -312,7 +313,7 @@ function App() {
       const winner = checkWin(largerBoard!)
 
       if (winner) {
-        alert(`USE EFFECT ${winner} won the game!`)
+        alert(`${winner} won the game!`)
         setCounterO([])
         setCounterX([])
       }
@@ -324,14 +325,18 @@ function App() {
   };
 
   return (
-    <div className='h-screen flex items-center'>
-      CURRENT PLAYER: {currentPlayer}
-      <div className='board'>
+    <div className='w-screen flex items-center justify-center back'>
+      <div className='absolute top-10 text-white'>
+        CURRENT PLAYER: {currentPlayer}
+        {selectingBoard && 
+        <h4>Player {currentPlayer}, please select the next board.</h4>}
+      </div>
+      <div className='board rounded-md bg-cyan-700 bg-opacity-50'>
         {currentBoard ? (
           currentBoard.matrix.map((row, rowIdx) => (
             <div className='row' key={rowIdx}>
               {row.map((cell, colIdx) => (
-                <div className='cell' onClick={() => handleClick({ row: rowIdx, col: colIdx}, { row: rowIdx, col: colIdx })} key={colIdx}>
+                <div className={'cell rounded-md'} onClick={() => handleClick({ row: rowIdx, col: colIdx}, { row: rowIdx, col: colIdx })} key={colIdx}>
                   {cell}
                 </div>
               ))}
