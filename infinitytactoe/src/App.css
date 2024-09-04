@@ -40,14 +40,14 @@ body {
 
 .empty-board {
   padding: 10px;
-  height: min-content;
   display: grid;
   grid-template-rows: subgrid;
   grid-template-columns: subgrid;
   gap: 5px;
-  background-color: aquamarine;
+  background-color: rgba(192, 192, 192, 0.801);
   cursor: pointer;
   border: 2px solid #333;
+  place-items: center;
 }
 .empty-board:hover {
   background-color: orange;
@@ -61,7 +61,7 @@ body {
   color: rgb(0, 0, 0);
   width: 100px;
   height: 100px;
-  background-color: rgba(192, 192, 192, 0.801);
+  background-color: rgba(83, 83, 83, 0.801);
   opacity: 0.75;
   display: flex;
   justify-content: center;
@@ -79,7 +79,7 @@ body {
   grid-row: 1 / 4; /* Adjust these values to make the cell span 3 rows */
   width: 100%;
   height: 100%;
-  background-color: rgb(104, 104, 104);
+  background-color: rgba(192, 192, 192, 0.801);
   display: flex;
   justify-content: center;
   align-items: center;

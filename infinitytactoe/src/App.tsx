@@ -3,6 +3,8 @@ import { motion } from "framer-motion"
 import { Board } from './classes/board';
 import { Token, Index } from './types';
 import { checkWin, unSet } from './utils';
+import circle from "./assets/tictactoken/Circle2.png"
+import cross from "./assets/tictactoken/Circle2.png"
 import './App.css';
 
 function App() {
@@ -179,8 +181,6 @@ function App() {
     }
   };
 
-  console.log(gameIsWon)
-
   const updateLargerBoard = (winner: Token, boardIdx: { row: number; col: number }) => {
     const { row: boardRow, col: boardCol } = boardIdx;
     console.log("UpdatedBoard on Position:", boardIdx)
@@ -324,6 +324,9 @@ function App() {
     return board.matrix.flat().every(cell => cell === null);
   };
 
+  console.log("BigBoard:", largerBoard)
+  console.log("CurrentBoard:", currentBoard?.matrix)
+
   return (
     <div className='w-screen flex items-center justify-center back'>
       <div className='absolute top-10 text-white'>
@@ -337,7 +340,7 @@ function App() {
             <div className='row' key={rowIdx}>
               {row.map((cell, colIdx) => (
                 <div className={'cell rounded-md'} onClick={() => handleClick({ row: rowIdx, col: colIdx}, { row: rowIdx, col: colIdx })} key={colIdx}>
-                  {cell}
+                  {cell && <img className='w-20' src={(cell === Token.X ? cross : circle)} alt="token" />}
                 </div>
               ))}
             </div>
@@ -347,18 +350,18 @@ function App() {
             <div className='row' key={boardRowIdx}>
               {boardRow.map((board, boardColIdx) => (
                 <div
-                  className={`${isBoardEmpty(board) ? 'empty-board' : 'board'}`}
+                  className={`rounded-md bg-opacity-50 ${isBoardEmpty(board) ? 'empty-board' : 'board'}`}
                   key={boardColIdx}
                 >
                   {board.matrix.map((row, rowIdx) => (
                     <div className='row' key={rowIdx}>
                       {row.map((cell, colIdx) => (
                         <div
-                          className={`${board.winner !== null ? 'big-cell' : 'cell'}`}
+                          className={`rounded-md bg-opacity-50 ${board.winner !== null ? 'big-cell' : 'cell'}`}
                           onClick={() => handleClick({ row: boardRowIdx, col: boardColIdx }, { row: rowIdx, col: colIdx })}
                           key={colIdx}
                         >
-                          {cell}
+                          {cell && <img className='w-20' src={(cell === Token.X ? cross : circle)} alt="token" />}
                         </div>
                       ))}
                     </div>
