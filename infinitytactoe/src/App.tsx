@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { Board } from './classes/board';
 import { Token, Index } from './types';
 import { checkWin, unSet } from './utils';
 import circle from "./assets/tictactoken/Circle2.png"
-import cross from "./assets/tictactoken/Circle2.png"
+import cross from "./assets/tictactoken/Cross2.png"
 import './App.css';
 
 function App() {
@@ -12,7 +12,7 @@ function App() {
   const [currentPlayer, setCurrentPlayer] = useState<Token>(Token.X);
   const [initialBoard, setInitialBoard] = useState(new Board(3));
   const [currentBoard, setCurrentBoard] = useState(initialBoard);
-  const [selectingBoard, setSelectingBoard] = useState<Boolean>(false);
+  const [selectingBoard, setSelectingBoard] = useState<boolean>(false);
   const [largerBoard, setLargerBoard] = useState<Board[][] | null>(null);
   const [boardIndex, setBoardIndex] = useState<Index | null>(null)
   const [counterX, setCounterX] = useState<Array<Index>>([])
@@ -20,13 +20,21 @@ function App() {
   const [counterO, setCounterO] = useState<Array<Index>>([])
   const [largerBoardCounterO, setLargerBoardCounterO] = useState<Array<Index>>([])
   const [gameIsWon, setGameIsWon] = useState<boolean>(false)
-  
+
   const handleClick = (boardIdx: { row: number; col: number }, cellIdx: { row: number; col: number }) => {
     if (largerBoard) {
       const { row: boardRow, col: boardCol } = boardIdx;
       const { row: cellRow, col: cellCol } = cellIdx;
 
-      if (!selectingBoard) {
+      if (selectingBoard) {
+        if (!largerBoard[boardRow][boardCol].winner) {
+          setCurrentBoard(largerBoard[boardRow][boardCol]);
+          setBoardIndex(boardIdx);
+          setSelectingBoard(false);
+        } else {
+          alert(`This board is complete! ${largerBoard[boardRow][boardCol].winner} won.`);
+        }
+      } else {
         if (currentBoard.matrix[cellRow][cellCol] === null) {
           const position = { row: cellRow, col: cellCol }
 
@@ -100,15 +108,6 @@ function App() {
           } else {
             setCurrentPlayer(currentPlayer === Token.X ? Token.O : Token.X);
           }
-        }
-      } else if (selectingBoard) {
-        if (!largerBoard[boardRow][boardCol].winner){
-          setCurrentBoard(largerBoard[boardRow][boardCol]);
-          setBoardIndex(boardIdx)
-          console.log("Set Current Board to:", { row: boardRow, col: boardCol })
-          setSelectingBoard(false);
-        } else {
-          alert(`This board is complete! ${largerBoard[boardRow][boardCol].winner} won.`)
         }
       }
     } else {
@@ -204,8 +203,8 @@ function App() {
         setLargerBoardCounterX(newCounter)
 
         if (gameWinner) {
-          alert(`UPDATE LARGER ${gameWinner} won the game`)
           setGameIsWon(true)
+          alert(`UPDATE LARGER ${gameWinner} won the game`)
           const splicedCounter = largerBoardCounterX.splice(1, 2)
           const newCounter = [...splicedCounter, boardIdx]
 
@@ -239,8 +238,8 @@ function App() {
         setLargerBoardCounterO(newCounter)
 
         if (gameWinner) {
-          alert(`UPDATE LARGER ${gameWinner} won the game`)
           setGameIsWon(true)
+          alert(`UPDATE LARGER ${gameWinner} won the game`)
           const splicedCounter = largerBoardCounterO.splice(1, 2)
           const newCounter = [...splicedCounter, boardIdx]
 
@@ -296,6 +295,20 @@ function App() {
     setSelectingBoard(true);
   };
 
+  const restartGame = () => {
+    setCurrentPlayer(Token.X);
+    setInitialBoard(new Board(3));
+    setCurrentBoard(new Board(3));
+    setSelectingBoard(false);
+    setLargerBoard(null);
+    setBoardIndex(null);
+    setCounterX([]);
+    setLargerBoardCounterX([]);
+    setCounterO([]);
+    setLargerBoardCounterO([]);
+    setGameIsWon(false);
+  };
+
 
   useEffect(() => {
     if (initialBoard) {
@@ -313,6 +326,7 @@ function App() {
       const winner = checkWin(largerBoard!)
 
       if (winner) {
+        setGameIsWon(true)
         alert(`${winner} won the game!`)
         setCounterO([])
         setCounterX([])
@@ -324,23 +338,110 @@ function App() {
     return board.matrix.flat().every(cell => cell === null);
   };
 
-  console.log("BigBoard:", largerBoard)
-  console.log("CurrentBoard:", currentBoard?.matrix)
+  //console.log("BigBoard:", largerBoard)
+  //console.log("CurrentBoard:", currentBoard?.matrix)
+  //console.log("currentPlayer:", currentPlayer)
+  console.log("gameIsWon:", gameIsWon)
+
+  const tokenVariants = {
+    initial: { scale: 0, opacity: 0 },
+    animate: { scale: 1, opacity: 1 },
+    exit: { scale: 0, opacity: 0 }
+  };
+
+  const boardVariants = {
+    initial: { scale: 0.8, opacity: 0 },
+    animate: { scale: 1, opacity: 1 },
+    exit: { scale: 0.8, opacity: 0 }
+  };
+
+  const winnerVariants = {
+    initial: { y: -50, opacity: 0 },
+    animate: { y: 0, opacity: 1 },
+    exit: { y: 50, opacity: 0 }
+  };
+
+  // Add this new function to determine if a cell is part of the winning line
+  const isWinningCell = (board: Board, rowIdx: number, colIdx: number) => {
+    if (!board.winner || !board.winningLine) return false;
+    return board.winningLine.some(cell => cell.row === rowIdx && cell.col === colIdx);
+  };
 
   return (
     <div className='w-screen flex items-center justify-center back'>
-      <div className='absolute top-10 text-white'>
-        CURRENT PLAYER: {currentPlayer}
-        {selectingBoard && 
-        <h4>Player {currentPlayer}, please select the next board.</h4>}
-      </div>
-      <div className='board rounded-md bg-cyan-700 bg-opacity-50'>
+      <AnimatePresence>
+        {gameIsWon && (
+          <motion.div
+            className='text-center absolute top-10 text-white'
+            variants={winnerVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+          >
+            <div className="bg-white text-black p-2 rounded-md mb-4">
+              <h4>Game is won! Reset the board to play again.</h4>
+            </div>
+            <motion.button 
+              className='bg-slate-800 hover:bg-slate-100 hover:text-black text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out'
+              onClick={restartGame}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Restart Game
+            </motion.button>
+          </motion.div>
+        )}
+        {!gameIsWon && (
+          <motion.div
+            className='text-center absolute top-20 text-white'
+            variants={winnerVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+          >
+            {selectingBoard && (
+              <div className="bg-white text-black p-2 rounded-md">
+                <h4 className="px-10">
+                  Player {currentPlayer === Token.X ? 'X' : 'O'}, please select next board
+                </h4>
+              </div>
+            )}
+            {!selectingBoard && 
+              <div className='bg-white text-black p-2 rounded-md'>
+                <h4 className='px-10'>Current Player: {currentPlayer === Token.X ? 'X' : 'O'}</h4>
+              </div>
+            }
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <motion.div 
+        className='board rounded-md bg-cyan-700 bg-opacity-50'
+        variants={boardVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        key={largerBoard ? 'largerBoard' : 'initialBoard'}
+      >
         {currentBoard ? (
           currentBoard.matrix.map((row, rowIdx) => (
             <div className='row' key={rowIdx}>
               {row.map((cell, colIdx) => (
                 <div className={'cell rounded-md'} onClick={() => handleClick({ row: rowIdx, col: colIdx}, { row: rowIdx, col: colIdx })} key={colIdx}>
-                  {cell && <img className='w-20' src={(cell === Token.X ? cross : circle)} alt="token" />}
+                  <AnimatePresence>
+                    {cell && (
+                      <motion.img 
+                        className='w-20' 
+                        src={(cell === Token.X ? cross : circle)} 
+                        alt="token"
+                        variants={tokenVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        key={`${rowIdx}-${colIdx}-${cell}`}
+                      />
+                    )}
+                  </AnimatePresence>
                 </div>
               ))}
             </div>
@@ -350,18 +451,41 @@ function App() {
             <div className='row' key={boardRowIdx}>
               {boardRow.map((board, boardColIdx) => (
                 <div
-                  className={`rounded-md bg-opacity-50 ${isBoardEmpty(board) ? 'empty-board' : 'board'}`}
+                  className={`rounded-md bg-opacity-50 ${
+                    isBoardEmpty(board) ? 'empty-board' : 'board'
+                  }`}
                   key={boardColIdx}
                 >
                   {board.matrix.map((row, rowIdx) => (
                     <div className='row' key={rowIdx}>
                       {row.map((cell, colIdx) => (
                         <div
-                          className={`rounded-md bg-opacity-50 ${board.winner !== null ? 'big-cell' : 'cell'}`}
+                          className={`rounded-md bg-opacity-50 ${
+                            board.winner !== null 
+                              ? isWinningCell(board, rowIdx, colIdx)
+                                ? 'big-cell-winner'
+                                : board.winner === Token.X 
+                                  ? 'big-cell-x' 
+                                  : 'big-cell-o'
+                              : 'cell'
+                          }`}
                           onClick={() => handleClick({ row: boardRowIdx, col: boardColIdx }, { row: rowIdx, col: colIdx })}
                           key={colIdx}
                         >
-                          {cell && <img className='w-20' src={(cell === Token.X ? cross : circle)} alt="token" />}
+                          <AnimatePresence>
+                            {cell && (
+                              <motion.img 
+                                className='w-20' 
+                                src={(cell === Token.X ? cross : circle)} 
+                                alt="token"
+                                variants={tokenVariants}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                                key={`${boardRowIdx}-${boardColIdx}-${rowIdx}-${colIdx}-${cell}`}
+                              />
+                            )}
+                          </AnimatePresence>
                         </div>
                       ))}
                     </div>
@@ -371,7 +495,7 @@ function App() {
             </div>
           ))
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }

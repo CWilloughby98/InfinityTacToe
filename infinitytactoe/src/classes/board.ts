@@ -14,11 +14,13 @@ export class Board {
     public dimension:number
     public matrix:(Token | null)[][]
     public winner:(Token | null)
+    public winningLine: { row: number, col: number }[] | null;
 
     constructor(dimension:number) {
         this.dimension = dimension
         this.matrix = Board.createEmptyBoard(dimension)
         this.winner = null
+        this.winningLine = null;
     }
 
     public set(token:Token | null, position:{row: number, col:number}) {
@@ -47,27 +49,34 @@ export class Board {
             return null
         }
 
+        // Check rows
         for (let row = 0; row < dimension; row++) {
             if (this.matrix[row][0] && this.matrix[row].every(cell => cell === this.matrix[row][0])) {
+                this.winningLine = Array(dimension).fill(0).map((_, col) => ({ row, col }));
                 return this.matrix[row][0];
             }
         }
-    
+
+        // Check columns
         for (let col = 0; col < dimension; col++) {
             if (this.matrix[0][col] && this.matrix.every(row => row[col] === this.matrix[0][col])) {
+                this.winningLine = Array(dimension).fill(0).map((_, row) => ({ row, col }));
                 return this.matrix[0][col];
             }
         }
-    
-        // Check diagonals
+
+        // Check main diagonal
         if (this.matrix[0][0] && this.matrix.every((row, idx) => row[idx] === this.matrix[0][0])) {
+            this.winningLine = Array(dimension).fill(0).map((_, idx) => ({ row: idx, col: idx }));
             return this.matrix[0][0];
         }
-    
+
+        // Check anti-diagonal
         if (this.matrix[0][dimension - 1] && this.matrix.every((row, idx) => row[dimension - 1 - idx] === this.matrix[0][dimension - 1])) {
+            this.winningLine = Array(dimension).fill(0).map((_, idx) => ({ row: idx, col: dimension - 1 - idx }));
             return this.matrix[0][dimension - 1];
         }
-    
+
         return null;
     }
 
